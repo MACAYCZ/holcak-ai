@@ -1,2 +1,2 @@
-# holcak-ai
-My personal neural network library written in C.
+# Holcak AI
+Simple C library implementing trainable neural network structure.
