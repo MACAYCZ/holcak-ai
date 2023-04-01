@@ -27,25 +27,42 @@ double *HAI_layer_forward(HAI_layer_t *s, double *inputs, uint32_t inputs_size) 
 	return outputs;
 }
 
-double *HAI_layer_backward(HAI_layer_t *s, double *inputs, uint32_t inputs_size, HAI_layer_t *next_layer, double *delta, double learning_rate, bool output_delta) {
-#define MAX(A, B)((A)>(B)?(A):(B))
-#define MIN(A, B)((A)<(B)?(A):(B))
-	for (uint32_t outi = 0; outi < s->neurons_size; outi++) {
-		for (uint32_t inpi = 0; inpi < inputs_size; inpi++) {
-			s->neurons[outi].weights[inpi] -= inputs[inpi] * delta[outi] * learning_rate;
-			s->neurons[outi].weights[inpi] = MAX(MIN(s->neurons[outi].weights[inpi], 1.0f), -1.0f);
-		}
-		s->neurons[outi].bias -= delta[outi] * learning_rate;
-		s->neurons[outi].bias = MAX(MIN(s->neurons[outi].bias, 1.0f), -1.0f);
+double **HAI_layer_forward_info(HAI_layer_t *s, double *inputs, uint32_t inputs_size) {
+	double **outputs = malloc(2 * sizeof(double*));
+	for (uint32_t i = 0; i < 2; i++) {
+		outputs[i] = malloc(s->neurons_size * sizeof(double));
 	}
-	if (output_delta == false) {
-		return NULL;
-	}
-	double *outputs = malloc(inputs_size * sizeof(double));
-	for (uint32_t i = 0; i < inputs_size; i++) {
-		for (uint32_t j = 0; j < s->neurons_size; j++) {			
-			outputs[i] = s->neurons[i].weights[j] * delta[j];
-		}
+	for (uint32_t i = 0; i < s->neurons_size; i++) {
+		double *output = HAI_neuron_forward_info(&s->neurons[i], inputs, inputs_size);
+		outputs[0][i] = output[0];
+		outputs[1][i] = output[1];
+		free(output);
 	}
 	return outputs;
+}
+
+double *HAI_layer_output_slope(HAI_layer_t *s, double *weighted_outputs, double *activated_outputs, double *expected_outputs) {
+	double *slope = malloc(s->neurons_size * sizeof(double));
+	for (uint32_t i = 0; i < s->neurons_size; i++) {
+		slope[i] = s->neurons[i].derivative(weighted_outputs[i]) * 2.0f * (activated_outputs[i] - expected_outputs[i]);
+	}
+	return slope;
+}
+
+double *HAI_layer_hidden_slope(HAI_layer_t *s, double *slope, double *weighted_inputs, double *activated_inputs, HAI_layer_t *prev_layer, double learning_rate, uint32_t inputs_size) {
+	for (uint32_t i = 0; i < s->neurons_size; i++) {
+		HAI_neuron_update(&s->neurons[i], slope[i], activated_inputs, learning_rate, inputs_size);
+	}
+	if (weighted_inputs == NULL) {
+		return NULL;
+	}
+	double *new_slope = malloc(inputs_size * sizeof(double));
+	for (uint32_t i = 0; i < inputs_size; i++) {
+		new_slope[i] = 0.0f;
+		for (uint32_t j = 0; j < s->neurons_size; j++) {
+			new_slope[i] += s->neurons[j].weights[i] * slope[i];
+		}
+		new_slope[i] *= prev_layer->neurons[i].derivative(weighted_inputs[i]);
+	}
+	return new_slope;
 }

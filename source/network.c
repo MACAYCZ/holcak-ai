@@ -47,42 +47,34 @@ double *HAI_network_forward(HAI_network_t *s, double *inputs) {
 }
 
 void HAI_network_backward(HAI_network_t *s, double *inputs, double *expected, double learning_rate) {
+	// Output layer: derivative(output_weighted[i]) * 2 * (output_activated[i] - expected_output[i])
+	// Hidden layer: derivative(output_weighted[i]) * next_layer_weight[i]
+	// Weight: input_activated[i]
+	// Bias: 1
 	double **weighted = malloc(s->layers_size * sizeof(double*));
-	double **activated = malloc((s->layers_size + 1) * sizeof(double*));
-	uint32_t inputs_size = s->inputs_size;
-	activated[0] = inputs;
-
+	double **activated = malloc(s->layers_size * sizeof(double*));
 	for (uint32_t i = 0; i < s->layers_size; i++) {
-		weighted[i] = malloc(s->layers[i].neurons_size * sizeof(double));
-		activated[i+1] = malloc(s->layers[i].neurons_size * sizeof(double));
-		for (uint32_t j = 0; j < s->layers[i].neurons_size; j++) {
-			weighted[i][j] = HAI_neuron_weighted(&s->layers[i].neurons[j], activated[i], inputs_size);
-			activated[i+1][j] = s->layers[i].neurons[j].activate(weighted[i][j]);
-		}
-		inputs_size = s->layers[i].neurons_size;
+		double **outputs = HAI_layer_forward_info(&s->layers[i],
+				i == 0 ? inputs : activated[i-1],
+				i == 0 ? s->inputs_size : s->layers[i-1].neurons_size);
+		weighted[i] = outputs[0];
+		activated[i] = outputs[1];
+		free(outputs);
 	}
-
-	// NOTE: delta = nodeValues
-	double *delta = malloc(s->layers[s->layers_size-1].neurons_size * sizeof(double));
-	for (uint32_t i = 0; i < s->layers[s->layers_size-1].neurons_size; i++) {
-		double cost_delta = 2 * (activated[s->layers_size][i] - expected[i]);
-		double weighted_delta = s->layers[s->layers_size-1].neurons[i].derivative(weighted[s->layers_size-1][i]);
-		delta[i] = cost_delta * weighted_delta;
+	double *slope = HAI_layer_output_slope(&s->layers[s->layers_size-1],
+			weighted[s->layers_size-1], activated[s->layers_size-1], expected);
+	for (uint32_t i = s->layers_size - 1; i != UINT32_MAX; i--) {
+		double *old_slope = slope;
+		slope = i > 0 ? HAI_layer_hidden_slope(&s->layers[i], slope, weighted[i-1], activated[i-1], &s->layers[i-1], learning_rate, s->layers[i-1].neurons_size) :
+			HAI_layer_hidden_slope(&s->layers[i], slope, NULL, inputs, NULL, learning_rate, s->inputs_size);
+		free(old_slope);
 	}
-
-	for (uint32_t i = s->layers_size-1; i > 0; i--) {
-		double *old_delta = delta;
-		delta = HAI_layer_backward(&s->layers[i], activated[i], s->layers[i-1].neurons_size, &s->layers[i+1], delta, learning_rate, true);
-		free(old_delta);
-	}
-	HAI_layer_backward(&s->layers[0], activated[0], s->inputs_size, NULL, delta, learning_rate, false);
-
 	for (uint32_t i = 0; i < s->layers_size; i++) {
-		free(activated[i+1]);
 		free(weighted[i]);
+		free(activated[i]);
 	}
-	free(activated);
 	free(weighted);
+	free(activated);
 }
 
 double HAI_network_cost(HAI_network_t *s, double *inputs, double *expected) {
@@ -93,5 +85,5 @@ double HAI_network_cost(HAI_network_t *s, double *inputs, double *expected) {
 		cost += output_cost * output_cost;
 	}
 	free(outputs);
-	return cost / 2;
+	return cost;
 }
