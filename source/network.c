@@ -47,10 +47,6 @@ double *HAI_network_forward(HAI_network_t *s, double *inputs) {
 }
 
 void HAI_network_backward(HAI_network_t *s, double *inputs, double *expected, double learning_rate) {
-	// Output layer: derivative(output_weighted[i]) * 2 * (output_activated[i] - expected_output[i])
-	// Hidden layer: derivative(output_weighted[i]) * next_layer_weight[i]
-	// Weight: input_activated[i]
-	// Bias: 1
 	double **weighted = malloc(s->layers_size * sizeof(double*));
 	double **activated = malloc(s->layers_size * sizeof(double*));
 	for (uint32_t i = 0; i < s->layers_size; i++) {
