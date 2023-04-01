@@ -10,7 +10,7 @@ typedef struct {
 } HAI_layer_t;
 
 HAI_layer_t HAI_layer_init(uint32_t neurons_size, uint32_t inputs_size, HAI_activation_t activate, HAI_activation_t derivative);
-void HAI_layer_free(HAI_layer_t *s, uint32_t inputs_size);
+void HAI_layer_free(HAI_layer_t *s);
 double *HAI_layer_forward(HAI_layer_t *s, double *inputs, uint32_t inputs_size);
 double **HAI_layer_forward_info(HAI_layer_t *s, double *inputs, uint32_t inputs_size);
 double *HAI_layer_output_slope(HAI_layer_t *s, double *weighted_outputs, double *activated_outputs, double *expected_outputs);

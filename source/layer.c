@@ -12,9 +12,9 @@ HAI_layer_t HAI_layer_init(uint32_t neurons_size, uint32_t inputs_size, HAI_acti
 	return s;
 }
 
-void HAI_layer_free(HAI_layer_t *s, uint32_t inputs_size) {
-	while (--inputs_size != UINT32_MAX) {
-		HAI_neuron_free(&s->neurons[inputs_size]);
+void HAI_layer_free(HAI_layer_t *s) {
+	while (--s->neurons_size != UINT32_MAX) {
+		HAI_neuron_free(&s->neurons[s->neurons_size]);
 	}
 	free(s->neurons);
 }

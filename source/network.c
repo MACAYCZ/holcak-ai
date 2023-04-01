@@ -28,10 +28,8 @@ HAI_network_t HAI_network_init(uint32_t layers_size, uint32_t inputs_size, ...) 
 }
 
 void HAI_network_free(HAI_network_t *s) {
-	uint32_t inputs_size = s->inputs_size;
 	while (--s->layers_size != UINT32_MAX) {
-		HAI_layer_free(&s->layers[s->layers_size], inputs_size);
-		inputs_size = s->layers[s->layers_size].neurons_size;
+		HAI_layer_free(&s->layers[s->layers_size]);
 	}
 	free(s->layers);
 }
