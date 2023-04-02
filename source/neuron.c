@@ -40,8 +40,8 @@ double *HAI_neuron_forward_info(HAI_neuron_t *s, double *inputs, uint32_t inputs
 void HAI_neuron_update(HAI_neuron_t *s, double slope, double *activated_inputs, double learning_rate, uint32_t inputs_size) {
 	for (uint32_t i = 0; i < inputs_size; i++) {
 		s->weights[i] -= activated_inputs[i] * slope * learning_rate;
-		s->weights[i] = fmax(-1.0f, fmin(1.0f, s->weights[i]));
+//		s->weights[i] = fmax(-1.0f, fmin(1.0f, s->weights[i]));
 	}
 	s->bias -= slope * learning_rate;
-	s->bias = fmax(-1.0f, fmin(1.0f, s->bias));
+//	s->bias = fmax(-1.0f, fmin(1.0f, s->bias));
 }

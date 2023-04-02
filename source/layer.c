@@ -44,7 +44,7 @@ double **HAI_layer_forward_info(HAI_layer_t *s, double *inputs, uint32_t inputs_
 double *HAI_layer_output_slope(HAI_layer_t *s, double *weighted_outputs, double *activated_outputs, double *expected_outputs) {
 	double *slope = malloc(s->neurons_size * sizeof(double));
 	for (uint32_t i = 0; i < s->neurons_size; i++) {
-		slope[i] = s->neurons[i].derivative(weighted_outputs[i]) * 2.0f * (activated_outputs[i] - expected_outputs[i]);
+		slope[i] = s->neurons[i].derivative(weighted_outputs[i]) * (activated_outputs[i] - expected_outputs[i]);
 	}
 	return slope;
 }
