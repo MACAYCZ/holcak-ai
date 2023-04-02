@@ -11,4 +11,8 @@ double HAI_sigmoid_derivative(double x);
 double HAI_tanh_activate(double x);
 double HAI_tanh_derivative(double x);
 
+#define HAI_LEAKY_RELU HAI_leaky_relu_activate, HAI_leaky_relu_derivative
+double HAI_leaky_relu_activate(double x);
+double HAI_leaky_relu_derivative(double x);
+
 #endif//HAI_ACTIVATION_H_

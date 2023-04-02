@@ -19,3 +19,11 @@ double HAI_tanh_derivative(double x) {
 	double a = HAI_tanh_activate(x);
 	return 1 - a * a;
 }
+
+double HAI_leaky_relu_activate(double x) {
+	return fmax(0.05f * x, x);
+}
+
+double HAI_leaky_relu_derivative(double x) {
+	return x > 0.0f ? 1.0f : 0.05f;
+}

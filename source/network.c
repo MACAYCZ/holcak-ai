@@ -79,5 +79,18 @@ double HAI_network_cost(HAI_network_t *s, double *inputs, double *expected) {
 		cost += output_cost * output_cost;
 	}
 	free(outputs);
-	return cost;
+	return cost * 0.5f;
+}
+
+uint32_t HAI_network_predict(HAI_network_t *s, double *inputs) {
+	double *outputs = HAI_network_forward(s, inputs);
+	double max_value = -INFINITY;
+	uint32_t max_index = 0;
+	for (uint32_t i = 0; i < s->layers[s->layers_size-1].neurons_size; i++) {
+		if (fmax(max_value, outputs[i]) == outputs[i]) {
+			max_value = outputs[i];
+			max_index = i;
+		}
+	}
+	return max_index;
 }
