@@ -57,7 +57,7 @@ int main(void) {
 	srand(time(NULL));
 
 	HAI_network_t network;
-	HAI_network_init(&network, 28*28, HAI_SIGMOID, 10);
+	HAI_network_init(&network, 28*28, HAI_SIGMOID, 100, HAI_SIGMOID, 10);
 
 	double **inputs = malloc(70000 * sizeof(double*));
 	double **labels = malloc(70000 * sizeof(double*));
@@ -67,27 +67,31 @@ int main(void) {
 	load_labels("datasets/mnist/t10k-labels.idx1-ubyte", labels + 60000, 10000);
 	printf("Training data successfully loaded!\n");
 
-	const uint32_t iterations = 1000;
-	const double learning_rate = 0.1f;
+	const uint32_t iterations = 10000;
+	const double learning_rate = 0.001f;
 
 	for (uint32_t i = 0; i < iterations; i++) {
-		double cost = 0.0f;
+		double training_cost = 0.0f;
+		uint32_t training_correct = 0;
 		for (uint32_t j = 0; j < 60000; j++) {
 			HAI_network_backward(&network, inputs[j], labels[j], learning_rate);
-			cost += HAI_network_cost(&network, labels[j]);
+			training_cost += HAI_network_cost(&network, labels[j]);
+			training_correct += labels[j][HAI_network_predict(&network)];
 		}
-		/*
+		double testing_cost = 0.0f;
+		uint32_t testing_correct = 0;
 		for (uint32_t j = 0; j < 10000; j++) {
 			HAI_network_forward(&network, inputs[j + 60000]);
-			cost += HAI_network_cost(&network, labels[j + 60000]);
+			testing_cost += HAI_network_cost(&network, labels[j + 60000]);
+			testing_correct += labels[j + 60000][HAI_network_predict(&network)];
 		}
-		*/
-		printf("Cost %2u: %.10f\n", i, cost / 10000.0f);
+		training_cost /= 60000.0f;
+		testing_cost /= 10000.0f;
+		printf("Training %3u: %5u / 60000: %f\n", i, training_correct, training_cost);
+		printf("Testing  %3u: %5u / 10000: %f\n\n", i, testing_correct, testing_cost);
 	}
 
-	putchar('\n');
 	debug_print(&network);
-
 	printf("Freeing allocated memory!\n");
 	for (uint32_t i = 0; i < 70000; i++) {
 		free(inputs[i]);

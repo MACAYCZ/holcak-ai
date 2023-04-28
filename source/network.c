@@ -41,8 +41,10 @@ void HAI_network_free(HAI_network_t *s) {
 }
 
 const double *HAI_network_forward(HAI_network_t *s, const double *inputs) {
+	uint32_t inputs_size = s->inputs_size;
 	for (uint32_t i = 0; i < s->size; i++) {
-		inputs = HAI_layer_forward(&s->layers[i], inputs, s->inputs_size);
+		inputs = HAI_layer_forward(&s->layers[i], inputs, inputs_size);
+		inputs_size = s->layers[i].size;
 	}
 	return inputs;
 }
@@ -76,4 +78,16 @@ double HAI_network_cost(HAI_network_t *s, const double *expected) {
 		cost += error * error;
 	}
 	return cost;
+}
+
+uint32_t HAI_network_predict(HAI_network_t *s) {
+	uint32_t predict = 0;
+	double predict_value = 0.0f;
+	for (uint32_t i = 0; i < s->layers[s->size-1].size; i++) {
+		if (s->layers[s->size-1].activated[i] > predict_value) {
+			predict_value = s->layers[s->size-1].activated[i];
+			predict = i;
+		}
+	}
+	return predict;
 }

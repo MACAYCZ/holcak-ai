@@ -18,5 +18,6 @@ void HAI_network_free(HAI_network_t *s);
 const double *HAI_network_forward(HAI_network_t *s, const double *inputs);
 void HAI_network_backward(HAI_network_t *s, const double *inputs, const double *expected, double learning_rate);
 double HAI_network_cost(HAI_network_t *s, const double *expected);
+uint32_t HAI_network_predict(HAI_network_t *s);
 
 #endif//HAI_NETWORK_H_

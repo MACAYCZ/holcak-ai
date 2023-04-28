@@ -13,8 +13,6 @@ double HAI_sigmoid_backward(double x) {
 double HAI_tanh_forward(double x) {
 	double y = exp(2.0f * x);
 	return (y - 1.0f) / (y + 1.0f);
-//	double y = exp(x), z = exp(-x);
-//	return (y - z) / (y + z);
 }
 
 double HAI_tanh_backward(double x) {
