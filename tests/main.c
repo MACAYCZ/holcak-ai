@@ -1,0 +1,100 @@
+#include "hai/network.h"
+#include <stdio.h>
+#include <time.h>
+
+void debug_print(HAI_network_t *s) {
+	uint32_t inputs_size = s->inputs_size;
+	for (uint32_t i = 0; i < s->size; i++) {
+		const HAI_layer_t *l = &s->layers[i];
+		printf("Layer %u:\n", i);
+		for (uint32_t j = 0; j < l->size; j++) {
+			printf("  Neuron %u:\n", j);
+			printf("    Bias: %.10f\n", l->neurons[j].bias);
+			printf("    Weights:\n");
+			const double *w = l->neurons[j].weights;
+			for (uint32_t k = 0; k < inputs_size; k++) {
+				printf("      Weight %u: %.10f\n", k, w[k]);
+			}
+		}
+		inputs_size = l->size;
+	}
+}
+
+void load_inputs(const char *path, double **inputs, uint32_t size) {
+	FILE *file = fopen(path, "rb");
+	if (file == NULL) {
+		fprintf(stderr, "Error: Opening `%s` failed!\n", path);
+		exit(EXIT_FAILURE);
+	}
+	fseek(file, 16, SEEK_SET);
+	for (uint32_t i = 0; i < size; i++) {
+		inputs[i] = malloc(28*28 * sizeof(double));
+		for (uint32_t j = 0; j < 28*28; j++) {
+			inputs[i][j] = (double)fgetc(file) / (double)UINT8_MAX;
+		}
+	}
+	fclose(file);
+}
+
+void load_labels(const char *path, double **labels, uint32_t size) {
+	FILE *file = fopen(path, "rb");
+	if (file == NULL) {
+		fprintf(stderr, "Error: Opening `%s` failed!\n", path);
+		exit(EXIT_FAILURE);
+	}
+	fseek(file, 8, SEEK_SET);
+	for (uint32_t i = 0; i < size; i++) {
+		labels[i] = malloc(10 * sizeof(double));
+		uint32_t v = fgetc(file);
+		for (uint32_t j = 0; j < 10; j++) {
+			labels[i][j] = (double)(v == j);
+		}
+	}
+	fclose(file);
+}
+
+int main(void) {
+	srand(time(NULL));
+
+	HAI_network_t network;
+	HAI_network_init(&network, 28*28, HAI_SIGMOID, 10);
+
+	double **inputs = malloc(70000 * sizeof(double*));
+	double **labels = malloc(70000 * sizeof(double*));
+	load_inputs("datasets/mnist/train-images.idx3-ubyte", inputs, 60000);
+	load_inputs("datasets/mnist/t10k-images.idx3-ubyte", inputs + 60000, 10000);
+	load_labels("datasets/mnist/train-labels.idx1-ubyte", labels, 60000);
+	load_labels("datasets/mnist/t10k-labels.idx1-ubyte", labels + 60000, 10000);
+	printf("Training data successfully loaded!\n");
+
+	const uint32_t iterations = 1000;
+	const double learning_rate = 0.1f;
+
+	for (uint32_t i = 0; i < iterations; i++) {
+		double cost = 0.0f;
+		for (uint32_t j = 0; j < 60000; j++) {
+			HAI_network_backward(&network, inputs[j], labels[j], learning_rate);
+			cost += HAI_network_cost(&network, labels[j]);
+		}
+		/*
+		for (uint32_t j = 0; j < 10000; j++) {
+			HAI_network_forward(&network, inputs[j + 60000]);
+			cost += HAI_network_cost(&network, labels[j + 60000]);
+		}
+		*/
+		printf("Cost %2u: %.10f\n", i, cost / 10000.0f);
+	}
+
+	putchar('\n');
+	debug_print(&network);
+
+	printf("Freeing allocated memory!\n");
+	for (uint32_t i = 0; i < 70000; i++) {
+		free(inputs[i]);
+		free(labels[i]);
+	}
+	free(inputs);
+	free(labels);
+	HAI_network_free(&network);
+	return 0;
+}
