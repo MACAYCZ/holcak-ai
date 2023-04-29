@@ -9,11 +9,10 @@ void debug_print(HAI_network_t *s) {
 		printf("Layer %u:\n", i);
 		for (uint32_t j = 0; j < l->size; j++) {
 			printf("  Neuron %u:\n", j);
-			printf("    Bias: %.10f\n", l->neurons[j].bias);
+			printf("    Bias: %.10f\n", l->bias[j]);
 			printf("    Weights:\n");
-			const double *w = l->neurons[j].weights;
 			for (uint32_t k = 0; k < inputs_size; k++) {
-				printf("      Weight %u: %.10f\n", k, w[k]);
+				printf("      Weight %u: %.10f\n", k, l->weights[j][k]);
 			}
 		}
 		inputs_size = l->size;
