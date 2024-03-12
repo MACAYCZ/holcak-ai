@@ -1,5 +1,5 @@
-#include <cstdio>
-#include "source/network.cuh"
+#include <iostream>
+#include "source/tensor.cuh"
 
 /*
  * Building:
@@ -12,16 +12,14 @@
 
 int main(void)
 {
-	HAI::Network network({
-		2,
-		2,
-	});
-	/*	
-	for (std::size_t i = 0; i < 10; i++) {
-		// TODO: This isn't possible because kernels cannot be class members!
-		network.Gradient<<<1, 1024>>>();
-		network.Update<<<1, 1024>>>();
+	HAI::Tensor<2> tensor({10, 10});
+	for (std::size_t i = 0; i < tensor.Size(0); i++) {
+		for (std::size_t j = 0; j < tensor.Size(1); j++) {
+			(double&)tensor[i][j] = i * tensor.Size(0) + j;
+		}
 	}
-	*/
+	for (std::size_t i = 0; i < tensor.Surface(); i++) {
+		std::cout << tensor.Data()[i] << std::endl;
+	}
 	return 0;
 }

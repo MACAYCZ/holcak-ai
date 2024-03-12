@@ -1,10 +1,10 @@
-#ifndef HAI_NETWORK_CUH_
-#define HAI_NETWORK_CUH_
+#pragma once
 #include <cstddef>
+
+// TODO: Give each class it's own file!
 
 namespace HAI
 {
-	// TODO: Move layer to it's own file!
 	class Layer
 	{
 	public:
@@ -44,6 +44,16 @@ namespace HAI
 		}
 		this->size = N;
 	}
-}
 
-#endif // HAI_NETWORK_CUH_
+	class Trainer
+	{
+	public:
+		Trainer(Network network, std::size_t blocks, std::size_t threads);
+		~Trainer();
+
+	private:
+		Network network;
+		std::size_t blocks;
+		std::size_t threads;
+	};
+}
