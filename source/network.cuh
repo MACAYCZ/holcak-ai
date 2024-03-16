@@ -1,33 +1,19 @@
-#pragma once
+#ifndef HAI_NETWORK_CUH_
+#define HAI_NETWORK_CUH_
 #include <cstddef>
-
-// TODO: Give each class it's own file!
+#include "layer.cuh"
 
 namespace HAI
 {
-	class Layer
-	{
-	public:
-		Layer(std::size_t inputs, std::size_t outputs);
-		~Layer();
-
-		__device__ void Forward(const double* inputs, double* weighted, double* activated);
-		__device__ void Backward();
-		__device__ void Update();
-
-	public:
-		// TODO: Make the variables private!
-		std::size_t inputs;
-		std::size_t outputs;
-		double* weights;
-		double* biases;
-	};
+	class Trainer;
 
 	class Network
 	{
+		friend Trainer;
+
 	public:
 		template <std::size_t N>
-		Network(const std::size_t (&size)[N]) requires(N > 1);
+		Network(const std::size_t (&size)[N]);
 		~Network();
 
 	private:
@@ -36,24 +22,16 @@ namespace HAI
 	};
 
 	template <std::size_t N>
-	Network::Network(const std::size_t (&size)[N]) requires(N > 1)
+	Network::Network(const std::size_t (&size)[N])
+		: size(N-1)
 	{
-		cudaMallocManaged(&this->layers, N * sizeof(Layer));
-		for (std::size_t i = 1; i < N; i++) {
-			this->layers[i] = Layer(size[i-1], size[i]);
+		// TODO: The initialization is really slow due to managed memory!
+		// The solution for that is to make kernel that will initialize the memory!
+		cudaMallocManaged(&this->layers, this->size * sizeof(Layer));
+		for (std::size_t i = 0; i < this->size; i++) {
+			this->layers[i] = Layer(size[i], size[i+1]);
 		}
-		this->size = N;
 	}
-
-	class Trainer
-	{
-	public:
-		Trainer(Network network, std::size_t blocks, std::size_t threads);
-		~Trainer();
-
-	private:
-		Network network;
-		std::size_t blocks;
-		std::size_t threads;
-	};
 }
+
+#endif // HAI_NETWORK_CUH_
